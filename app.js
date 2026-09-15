@@ -896,6 +896,7 @@
 
     g.globalCompositeOperation = 'destination-out';
     cv.classList.remove('done');
+    cv.__cssW = w;              /* 记录 CSS 宽度，供 resize 时判断是否需要重画 */
     $('scratchText').textContent = todayCard();
     scratchMoves = 0;
     return true;
@@ -1422,8 +1423,22 @@
 
   /* 视口变化时重排画布（保留画面） */
   window.addEventListener('resize', debounce(function () {
-    if (!draw.sized || $('panel-draw').hidden) return;
-    sizeCanvas(true);
+    if (draw.sized && !$('panel-draw').hidden) sizeCanvas(true);
+
+    /* 刮刮卡是位图，容器宽度变了必须重画，否则会被拉伸变形。
+       只在宽度有实质变化（例如横竖屏切换）时才重画，避免刮到一半被清空。 */
+    var sc = $('scratchCv');
+    if (!sc || $('panel-scratch').hidden) return;
+    var wrapW = sc.parentNode ? sc.parentNode.clientWidth : 0;
+    if (!wrapW || Math.abs((sc.__cssW || 0) - wrapW) < 8) return;
+    var wasDone = sc.classList.contains('done');
+    if (initScratch() && wasDone) {
+      var sg = sc.getContext('2d');
+      sg.setTransform(1, 0, 0, 1, 0, 0);
+      sg.globalCompositeOperation = 'destination-out';
+      sg.clearRect(0, 0, sc.width, sc.height);
+      sc.classList.add('done');
+    }
   }, 260));
 
   /* =========================================================================

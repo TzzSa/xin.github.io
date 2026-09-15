@@ -35,6 +35,8 @@ html,body{
               "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing:antialiased;
   overscroll-behavior-y:none;
+  overflow-x:hidden;          /* 兜底：任何元素溢出都不会出现横向滚动条 */
+  max-width:100%;
 }
 body{
   font-size:15px; line-height:1.6;
@@ -46,6 +48,8 @@ body{
   background-attachment:fixed;
 }
 @supports (min-height:100dvh){ html,body{ min-height:100dvh; } }
+/* 移动端 100vh 是「地址栏隐藏时」的高度，弹层按 vh 算会把底部按钮顶出可视区，故升级到 dvh */
+@supports (max-height:100dvh){ .modal-card{ max-height:86dvh; } }
 
 h1,h2,h3{ margin:0; font-weight:600; }
 ul,ol{ margin:0; padding:0; list-style:none; }
@@ -838,11 +842,48 @@ body.bg-paused .bg-fx .p{ animation-play-state:paused; }
   .modal-card{ padding:18px 16px; border-radius:18px; }
   .cfg-num{ flex-wrap:wrap; }
   .cfg-num .btn{ margin-left:0; }
+
+  /* ---- 输入框必须 ≥16px：iOS Safari 在聚焦字号 <16px 的输入框时会强制放大整页，
+         而且不会自动还原，用户会觉得「页面被撑坏了」。这里用同等特异性覆盖上面各条。 ---- */
+  .field input, .field textarea,
+  .quiz-q input, .cfg-ta, .cfg-num input,
+  .share-box input, .ask-custom input{ font-size:16px; }
+
+  /* 触控目标补足到 44px（苹果 HIG / Material 建议的最小可点区域） */
+  .icon-btn{ width:44px; height:44px; font-size:19px; }
+  .swatch{ width:34px; height:34px; }
+  .tab{ min-height:44px; }
+  .anni-del{ padding:10px; font-size:19px; }
+
+  /* 弹层用 dvh，避免移动端地址栏占位把底部按钮挤到屏幕外 */
+  .modal-card{ max-height:86dvh; }
+  .modal{ padding:14px; }
 }
 
 @media (max-width:360px){
   .mem-grid{ gap:6px; }
   .game-card b{ font-size:13px; }
+  .hero-days b{ font-size:46px; }
+  .hero-clock b{ font-size:18px; min-width:44px; }
+  .hero-clock > div{ min-width:44px; }
+  .wheel-wrap{ width:200px; height:200px; }
+  .icon-btn{ width:40px; height:40px; }
+}
+
+/* ---- 触屏设备：hover 效果会在点击后「粘住」，这里只中和会残留的位移变换，
+        颜色/阴影等反馈保留，点按反馈交给已有的 :active 与水波纹 ---- */
+@media (hover:none){
+  .btn:hover, .icon-btn:hover, .game-card:hover, .mem-card:hover,
+  .cmp-box:hover, .swatch:hover, .heart:hover, .anni-del:hover{ transform:none; }
+  .game-card:hover .game-emoji,
+  .anni-item:hover .anni-emoji{ transform:none; }
+  .btn-primary:hover::after{ left:-40%; }
+
+  /* 输入框 ≥16px 按「触屏」而不是「宽度」判断：
+     平板（iPad 竖屏 768px）同样会触发 iOS 的聚焦强制缩放，用宽度断点会漏掉。 */
+  .field input, .field textarea,
+  .quiz-q input, .cfg-ta, .cfg-num input,
+  .share-box input, .ask-custom input{ font-size:16px; }
 }
 
 /* 尊重减少动效偏好 */

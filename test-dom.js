@@ -468,5 +468,34 @@ step('切回前台 → 恢复背景动效', () => {
 ok('body 已移除 bg-paused', document.body.classList.contains('bg-paused') === false);
 ok('背景粒子已生成', stubFor('bgFx').children.length > 0, stubFor('bgFx').children.length);
 
+/* ------------------------- 10. 横竖屏切换：刮刮卡画布重排 ------------------------- */
+step('横屏：容器变宽 → 刮刮卡画布按新宽度重画', () => {
+  stubFor('panel-draw').hidden = true;          // 一次只开一个面板，隔离被测逻辑
+  stubFor('panel-scratch').hidden = false;
+  stubFor('scratchWrap').clientWidth = 360;
+  fire(stubFor('scratchNew'), 'click');         // 记录初始 CSS 宽度 360
+  stubFor('scratchWrap').clientWidth = 640;     // 模拟旋转到横屏
+  (winListeners['resize'] || []).forEach(fn => fn());
+  drainTimers(2);
+});
+ok('旋转后记录到新宽度', stubFor('scratchCv').__cssW === 640, stubFor('scratchCv').__cssW);
+ok('canvas 位图宽 = CSS 宽 × dpr(2)', stubFor('scratchCv').width === 1280, stubFor('scratchCv').width);
+
+step('宽度只差几像素 → 不重画，保住刮到一半的进度', () => {
+  stubFor('scratchWrap').clientWidth = 645;     // 只差 5px，低于 8px 阈值
+  (winListeners['resize'] || []).forEach(fn => fn());
+  drainTimers(2);
+});
+ok('小幅变化不触发重画', stubFor('scratchCv').__cssW === 640, stubFor('scratchCv').__cssW);
+
+step('已刮完的卡片旋转后仍是「已刮完」', () => {
+  stubFor('scratchCv').classList.add('done');
+  stubFor('scratchWrap').clientWidth = 800;
+  (winListeners['resize'] || []).forEach(fn => fn());
+  drainTimers(2);
+});
+ok('旋转后 done 状态被保留', stubFor('scratchCv').classList.contains('done') === true);
+ok('并已按新宽度重画', stubFor('scratchCv').__cssW === 800, stubFor('scratchCv').__cssW);
+
 console.log(fail === 0 ? '\napp.js 交互层测试全部通过 ✅' : `\n发现 ${fail} 个问题 ❌`);
 process.exit(fail ? 1 : 0);
