@@ -1,0 +1,14 @@
+# 本地工具与会话数据（不随网站发布）
+.workbuddy/
+.workbuddy-ai/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志与临时文件
+*.log
+*.tmp
