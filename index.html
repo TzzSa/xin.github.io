@@ -1,386 +1,451 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title></title>
-    <script src="js/jquery.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#FFFCF7" />
+<meta name="description" content="属于两个人的小站：恋爱计时器与默契小游戏" />
+<title>我们的小日子</title>
+<link rel="stylesheet" href="assets/style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>💛</text></svg>" />
 </head>
-<style>
-    * {
-        padding: 0;
-        margin: 0;
-    }
-    html,
-    body {
-        height: 100%;
-        padding: 0;
-        margin: 0;
-        background: #000;
-    }
- 
-    .aa {
-        position: fixed;
-        left: 50%;
-        bottom: 10px;
-        color: #ccc;
-    }
- 
-    .container {
-        width: 100%;
-        height: 100%;
-    }
-    canvas {
-        z-index: 99;
-        position: absolute;
-        width: 100%;
-        height: 100%;
-    }
-</style>
 <body>
-<!-- 樱花 -->
-<div id="jsi-cherry-container" class="container">
-    <audio autoplay="autopaly">
-        <source src="renxi.mp3" type="audio/mp3" />
-    </audio>
-    <img class="img" src="./123.png" alt="" />
-    <!-- 爱心 -->
-    <canvas id="pinkboard" class="container"> </canvas>
+
+<!-- ============ 首次进入设置引导 ============ -->
+<div id="onboard" class="onboard">
+  <div class="ob-card">
+    <div class="tape tape-1"></div>
+    <div class="tape tape-2"></div>
+    <h1 class="ob-title">欢迎来到<br />我们的小日子</h1>
+    <p class="ob-sub">先告诉我们一点点信息，之后就只属于你们两个人</p>
+
+    <form id="obForm" autocomplete="off">
+      <label class="field">
+        <span>在一起的日期</span>
+        <input id="obDate" type="date" required />
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>TA 的昵称</span>
+          <input id="obNickA" type="text" maxlength="12" placeholder="小熊" required />
+        </label>
+        <label class="field">
+          <span>你的昵称</span>
+          <input id="obNickB" type="text" maxlength="12" placeholder="小兔" required />
+        </label>
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit">开始我们的计时</button>
+      <p class="ob-note">所有数据只保存在这台设备的浏览器里，不会上传到任何服务器</p>
+    </form>
+  </div>
 </div>
- 
+
+<!-- ============ 主界面 ============ -->
+<div id="app" class="app" hidden>
+
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="brand">
+        <span class="brand-heart">💛</span>
+        <div>
+          <h1 id="brandTitle">我们的小日子</h1>
+          <p id="brandSub">和你在一起的第 <b id="dayShort">0</b> 天</p>
+        </div>
+      </div>
+      <button id="btnSettings" class="icon-btn" title="设置" aria-label="设置">⚙</button>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab on" data-view="timer" role="tab">计时</button>
+      <button class="tab" data-view="games" role="tab">小游戏</button>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <!-- ---------- 计时视图 ---------- -->
+    <section id="view-timer" class="view">
+
+      <div class="card hero">
+        <div class="hero-label">我们已经在一起</div>
+        <div class="hero-days">
+          <b id="dDays">0</b><span class="unit">天</span>
+        </div>
+        <div class="hero-clock">
+          <div><b id="dHours">00</b><span>时</span></div>
+          <i>:</i>
+          <div><b id="dMins">00</b><span>分</span></div>
+          <i>:</i>
+          <div><b id="dSecs">00</b><span>秒</span></div>
+        </div>
+        <div class="hero-since">始于 <span id="dSince">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>下一个纪念日</h2>
+          <button id="btnAddAnni" class="btn btn-ghost btn-sm">+ 添加</button>
+        </div>
+
+        <div id="anniNext" class="anni-next">
+          <div class="anni-next-ring">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="ring-bg" cx="60" cy="60" r="52" />
+              <circle id="ringFg" class="ring-fg" cx="60" cy="60" r="52" />
+            </svg>
+            <div class="ring-center">
+              <b id="anniLeft">—</b>
+              <span>天后</span>
+            </div>
+          </div>
+          <div class="anni-next-info">
+            <div class="anni-next-name" id="anniName">还没有纪念日</div>
+            <div class="anni-next-date" id="anniDate">点右上角添加一个吧</div>
+          </div>
+        </div>
+
+        <ul id="anniList" class="anni-list"></ul>
+
+        <form id="anniForm" class="anni-form" hidden>
+          <div class="field-row">
+            <label class="field">
+              <span>名称</span>
+              <input id="anniTitle" type="text" maxlength="16" placeholder="恋爱100天" required />
+            </label>
+            <label class="field">
+              <span>日期</span>
+              <input id="anniDateInput" type="date" required />
+            </label>
+          </div>
+          <label class="check">
+            <input id="anniYearly" type="checkbox" checked />
+            <span>每年重复（生日 / 纪念日）</span>
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" id="anniCancel" class="btn btn-ghost btn-sm">取消</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ---------- 游戏视图 ---------- -->
+    <section id="view-games" class="view" hidden>
+
+      <div class="game-grid">
+        <button class="game-card" data-game="quiz">
+          <span class="game-emoji">💌</span>
+          <b>默契大考验</b>
+          <i>各自的答案，能对上几题？</i>
+        </button>
+        <button class="game-card" data-game="wheel">
+          <span class="game-emoji">🎡</span>
+          <b>今天听谁的</b>
+          <i>纠结的时候，交给转盘</i>
+        </button>
+        <button class="game-card" data-game="scratch">
+          <span class="game-emoji">✨</span>
+          <b>今日份刮刮卡</b>
+          <i>刮开，是一句情话或一个任务</i>
+        </button>
+        <button class="game-card" data-game="tap">
+          <span class="game-emoji">💛</span>
+          <b>爱心手速 PK</b>
+          <i>30 秒，看谁点得多</i>
+        </button>
+        <button class="game-card" data-game="ten">
+          <span class="game-emoji">⏱</span>
+          <b>十秒挑战</b>
+          <i>心里默数 10 秒，看谁更准</i>
+        </button>
+        <button class="game-card" data-game="memory">
+          <span class="game-emoji">🧠</span>
+          <b>记忆翻牌</b>
+          <i>翻出成对的小事，比谁步数少</i>
+        </button>
+        <button class="game-card" data-game="draw">
+          <span class="game-emoji">🎨</span>
+          <b>你画我猜</b>
+          <i>60 秒涂鸦，让 TA 猜猜看</i>
+        </button>
+        <button class="game-card" data-game="truth">
+          <span class="game-emoji">🎯</span>
+          <b>真心话大冒险</b>
+          <i>抽一张，不许耍赖</i>
+        </button>
+      </div>
+
+      <!-- 游戏 1：默契问答 -->
+      <div class="card game-panel" id="panel-quiz" hidden>
+        <div class="card-head">
+          <h2>💌 默契大考验</h2>
+          <button class="btn btn-ghost btn-sm" data-close="quiz">收起</button>
+        </div>
+
+        <div class="who-pick">
+          <span>现在是谁在答题？</span>
+          <div class="seg">
+            <button class="seg-btn on" data-who="A">TA</button>
+            <button class="seg-btn" data-who="B">我</button>
+          </div>
+        </div>
+
+        <ol id="quizList" class="quiz-list"></ol>
+
+        <div class="quiz-actions">
+          <button id="quizSubmit" class="btn btn-primary">提交我的答案</button>
+          <button id="quizReset" class="btn btn-ghost btn-sm">清空重来</button>
+        </div>
+
+        <div id="quizResult" class="quiz-result" hidden></div>
+      </div>
+
+      <!-- 游戏 2：转盘 -->
+      <div class="card game-panel" id="panel-wheel" hidden>
+        <div class="card-head">
+          <h2>🎡 今天听谁的</h2>
+          <button class="btn btn-ghost btn-sm" data-close="wheel">收起</button>
+        </div>
+
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"></div>
+          <div id="wheel" class="wheel"></div>
+          <div class="wheel-center">GO</div>
+        </div>
+
+        <label class="field">
+          <span>候选（一行一个，2–8 个）</span>
+          <textarea id="wheelItems" rows="4" spellcheck="false"></textarea>
+        </label>
+
+        <div class="quiz-actions">
+          <button id="wheelSpin" class="btn btn-primary">转起来</button>
+          <button id="wheelReset" class="btn btn-ghost btn-sm">恢复默认</button>
+        </div>
+        <div id="wheelResult" class="soft-result" hidden></div>
+      </div>
+
+      <!-- 游戏 3：刮刮卡 -->
+      <div class="card game-panel" id="panel-scratch" hidden>
+        <div class="card-head">
+          <h2>✨ 今日份刮刮卡</h2>
+          <button class="btn btn-ghost btn-sm" data-close="scratch">收起</button>
+        </div>
+
+        <div class="scratch-wrap">
+          <div id="scratchText" class="scratch-text">刮开看看今天是什么</div>
+          <canvas id="scratchCv" class="scratch-cv"></canvas>
+        </div>
+
+        <div class="quiz-actions">
+          <button id="scratchNew" class="btn btn-primary">换一张</button>
+          <span class="hint-inline">每天会自动刷新一次</span>
+        </div>
+      </div>
+
+      <!-- 游戏 4：爱心手速 -->
+      <div class="card game-panel" id="panel-tap" hidden>
+        <div class="card-head">
+          <h2>💛 爱心手速 PK</h2>
+          <button class="btn btn-ghost btn-sm" data-close="tap">收起</button>
+        </div>
+
+        <div class="tap-hud">
+          <div><span>剩余</span><b id="tapTime">30.0</b></div>
+          <div><span>得分</span><b id="tapScore">0</b></div>
+          <div><span>连击</span><b id="tapCombo">0</b></div>
+        </div>
+
+        <div class="tap-stage-wrap">
+          <div id="tapStage" class="tap-stage">
+            <div id="tapReady" class="tap-ready">
+              <p>30 秒内点中尽可能多的爱心</p>
+              <button id="tapStart" class="btn btn-primary">开始</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tapBoard" class="tap-board"></div>
+        <div class="quiz-actions">
+          <button id="tapClear" class="btn btn-ghost btn-sm">清空战绩</button>
+        </div>
+      </div>
+
+      <!-- 游戏 5：十秒挑战 -->
+      <div class="card game-panel" id="panel-ten" hidden>
+        <div class="card-head">
+          <h2>⏱ 十秒挑战</h2>
+          <button class="btn btn-ghost btn-sm" data-close="ten">收起</button>
+        </div>
+
+        <p class="panel-tip">心里默数 10 秒，觉得到了就按“停”。两个人各来一次，看看误差和默契。</p>
+
+        <div class="ten-stage">
+          <div id="tenNum" class="ten-num">10.00</div>
+          <div id="tenHint" class="ten-hint">准备好了就点“开始数”</div>
+        </div>
+
+        <div class="quiz-actions">
+          <button id="tenStart" class="btn btn-primary">开始数</button>
+          <button id="tenStop" class="btn btn-primary" disabled>停！</button>
+          <button id="tenClear" class="btn btn-ghost btn-sm">清空记录</button>
+        </div>
+
+        <div id="tenBoard" class="soft-board"></div>
+      </div>
+
+      <!-- 游戏 6：记忆翻牌 -->
+      <div class="card game-panel" id="panel-memory" hidden>
+        <div class="card-head">
+          <h2>🧠 记忆翻牌</h2>
+          <button class="btn btn-ghost btn-sm" data-close="memory">收起</button>
+        </div>
+
+        <div class="mem-hud">
+          <div><span>步数</span><b id="memMoves">0</b></div>
+          <div><span>已配对</span><b id="memPairs">0 / 8</b></div>
+          <div><span>最佳</span><b id="memBest">—</b></div>
+        </div>
+
+        <div id="memGrid" class="mem-grid"></div>
+
+        <div class="quiz-actions">
+          <button id="memNew" class="btn btn-primary">重新洗牌</button>
+          <button id="memMode" class="btn btn-ghost btn-sm">换成我们的词</button>
+        </div>
+
+        <div id="memWords" class="mem-words" hidden>
+          <label class="field">
+            <span>写 8 个属于你们的词（一行一个）</span>
+            <textarea id="memWordsInput" rows="6" spellcheck="false"></textarea>
+          </label>
+          <div class="form-actions">
+            <button id="memWordsSave" class="btn btn-primary btn-sm">用这些词开局</button>
+            <button id="memWordsBack" class="btn btn-ghost btn-sm">用回图案</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 游戏 7：你画我猜 -->
+      <div class="card game-panel" id="panel-draw" hidden>
+        <div class="card-head">
+          <h2>🎨 你画我猜</h2>
+          <button class="btn btn-ghost btn-sm" data-close="draw">收起</button>
+        </div>
+
+        <div class="draw-bar">
+          <div class="draw-word">
+            <span>题目</span><b id="drawWord">—</b>
+            <button id="drawNewWord" class="btn btn-ghost btn-sm">换一个</button>
+          </div>
+          <div class="draw-timer"><b id="drawTime">60</b><span>秒</span></div>
+        </div>
+
+        <div class="draw-stage">
+          <canvas id="drawCv" class="draw-cv"></canvas>
+          <div id="drawVeil" class="draw-veil" hidden>
+            <p>画完啦，把手机递给 TA</p>
+            <button id="drawReveal" class="btn btn-primary">揭晓答案</button>
+          </div>
+        </div>
+
+        <div class="draw-tools">
+          <div class="palette" id="drawPalette"></div>
+          <button id="drawErase" class="btn btn-ghost btn-sm">橡皮</button>
+          <button id="drawUndo" class="btn btn-ghost btn-sm">撤销</button>
+          <button id="drawClear" class="btn btn-ghost btn-sm">清空</button>
+          <button id="drawDone" class="btn btn-primary btn-sm">我画完了</button>
+        </div>
+
+        <p class="panel-tip">画家点“我画完了”后画面会盖上，递给 TA 猜，再点揭晓。</p>
+      </div>
+
+      <!-- 游戏 8：真心话大冒险 -->
+      <div class="card game-panel" id="panel-truth" hidden>
+        <div class="card-head">
+          <h2>🎯 真心话大冒险</h2>
+          <button class="btn btn-ghost btn-sm" data-close="truth">收起</button>
+        </div>
+
+        <div class="seg seg-wide">
+          <button class="seg-btn on" data-td="truth">真心话</button>
+          <button class="seg-btn" data-td="dare">大冒险</button>
+          <button class="seg-btn" data-td="any">随便</button>
+        </div>
+
+        <div id="tdCard" class="td-card">
+          <span class="td-badge" id="tdBadge">真心话</span>
+          <p id="tdText">点下面的按钮抽一张</p>
+        </div>
+
+        <div class="quiz-actions">
+          <button id="tdDraw" class="btn btn-primary">抽一张</button>
+          <button id="tdEdit" class="btn btn-ghost btn-sm">自定义题库</button>
+        </div>
+
+        <div id="tdEditBox" class="td-edit" hidden>
+          <label class="field">
+            <span>真心话（一行一条）</span>
+            <textarea id="tdTruthInput" rows="5" spellcheck="false"></textarea>
+          </label>
+          <label class="field">
+            <span>大冒险（一行一条）</span>
+            <textarea id="tdDareInput" rows="5" spellcheck="false"></textarea>
+          </label>
+          <div class="form-actions">
+            <button id="tdSave" class="btn btn-primary btn-sm">保存题库</button>
+            <button id="tdRestore" class="btn btn-ghost btn-sm">恢复默认</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>只属于两个人的小角落 · 数据保存在本机浏览器</span>
+  </footer>
+</div>
+
+<!-- ============ 设置弹层 ============ -->
+<div id="settings" class="modal" hidden>
+  <div class="modal-mask" data-close-modal></div>
+  <div class="modal-card">
+    <div class="card-head">
+      <h2>设置</h2>
+      <button class="icon-btn" data-close-modal aria-label="关闭">✕</button>
+    </div>
+
+    <form id="setForm" autocomplete="off">
+      <label class="field">
+        <span>在一起的日期</span>
+        <input id="setDate" type="date" required />
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>TA 的昵称</span>
+          <input id="setNickA" type="text" maxlength="12" required />
+        </label>
+        <label class="field">
+          <span>你的昵称</span>
+          <input id="setNickB" type="text" maxlength="12" required />
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-sm">保存</button>
+        <button type="button" id="setExport" class="btn btn-ghost btn-sm">导出备份</button>
+        <button type="button" id="setReset" class="btn btn-danger btn-sm">清空全部数据</button>
+      </div>
+    </form>
+    <p class="ob-note">换设备时可用「导出备份」生成一段口令，在新设备设置里粘贴恢复</p>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="assets/core.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
-<script>
-    /*
-     * Settings
-     */
-    var settings = {
-        particles: {
-            length: 500, // maximum amount of particles
-            duration: 2, // particle duration in sec
-            velocity: 100, // particle velocity in pixels/sec
-            effect: -0.75, // play with this for a nice effect
-            size: 30, // particle size in pixels
-        },
-    };
- 
-    (function () {
-        var b = 0;
-        var c = ["ms", "moz", "webkit", "o"];
-        for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) {
-            window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"];
-            window.cancelAnimationFrame =
-                window[c[a] + "CancelAnimationFrame"] ||
-                window[c[a] + "CancelRequestAnimationFrame"];
-        }
-        if (!window.requestAnimationFrame) {
-            window.requestAnimationFrame = function (h, e) {
-                var d = new Date().getTime();
-                var f = Math.max(0, 16 - (d - b));
-                var g = window.setTimeout(function () {
-                    h(d + f);
-                }, f);
-                b = d + f;
-                return g;
-            };
-        }
-        if (!window.cancelAnimationFrame) {
-            window.cancelAnimationFrame = function (d) {
-                clearTimeout(d);
-            };
-        }
-    })();
- 
-    /*
-     * Point class
-     */
-    var Point = (function () {
-        function Point(x, y) {
-            this.x = typeof x !== "undefined" ? x : 0;
-            this.y = typeof y !== "undefined" ? y : 0;
-        }
-        Point.prototype.clone = function () {
-            return new Point(this.x, this.y);
-        };
-        Point.prototype.length = function (length) {
-            if (typeof length == "undefined")
-                return Math.sqrt(this.x * this.x + this.y * this.y);
-            this.normalize();
-            this.x *= length;
-            this.y *= length;
-            return this;
-        };
-        Point.prototype.normalize = function () {
-            var length = this.length();
-            this.x /= length;
-            this.y /= length;
-            return this;
-        };
-        return Point;
-    })();
- 
-    /*
-     * Particle class
-     */
-    var Particle = (function () {
-        function Particle() {
-            this.position = new Point();
-            this.velocity = new Point();
-            this.acceleration = new Point();
-            this.age = 0;
-        }
-        Particle.prototype.initialize = function (x, y, dx, dy) {
-            this.position.x = x;
-            this.position.y = y;
-            this.velocity.x = dx;
-            this.velocity.y = dy;
-            this.acceleration.x = dx * settings.particles.effect;
-            this.acceleration.y = dy * settings.particles.effect;
-            this.age = 0;
-        };
-        Particle.prototype.update = function (deltaTime) {
-            this.position.x += this.velocity.x * deltaTime;
-            this.position.y += this.velocity.y * deltaTime;
-            this.velocity.x += this.acceleration.x * deltaTime;
-            this.velocity.y += this.acceleration.y * deltaTime;
-            this.age += deltaTime;
-        };
-        Particle.prototype.draw = function (context, image) {
-            function ease(t) {
-                return --t * t * t + 1;
-            }
-            var size = image.width * ease(this.age / settings.particles.duration);
-            context.globalAlpha = 1 - this.age / settings.particles.duration;
-            context.drawImage(
-                image,
-                this.position.x - size / 2,
-                this.position.y - size / 2,
-                size,
-                size
-            );
-        };
-        return Particle;
-    })();
- 
-    /*
-     * ParticlePool class
-     */
-    var ParticlePool = (function () {
-        var particles,
-            firstActive = 0,
-            firstFree = 0,
-            duration = settings.particles.duration;
- 
-        function ParticlePool(length) {
-            // create and populate particle pool
-            particles = new Array(length);
-            for (var i = 0; i < particles.length; i++)
-                particles[i] = new Particle();
-        }
-        ParticlePool.prototype.add = function (x, y, dx, dy) {
-            particles[firstFree].initialize(x, y, dx, dy);
- 
-            // handle circular queue
-            firstFree++;
-            if (firstFree == particles.length) firstFree = 0;
-            if (firstActive == firstFree) firstActive++;
-            if (firstActive == particles.length) firstActive = 0;
-        };
-        ParticlePool.prototype.update = function (deltaTime) {
-            var i;
- 
-            // update active particles
-            if (firstActive < firstFree) {
-                for (i = firstActive; i < firstFree; i++)
-                    particles[i].update(deltaTime);
-            }
-            if (firstFree < firstActive) {
-                for (i = firstActive; i < particles.length; i++)
-                    particles[i].update(deltaTime);
-                for (i = 0; i < firstFree; i++) particles[i].update(deltaTime);
-            }
- 
-            // remove inactive particles
-            while (
-                particles[firstActive].age >= duration &&
-                firstActive != firstFree
-                ) {
-                firstActive++;
-                if (firstActive == particles.length) firstActive = 0;
-            }
-        };
-        ParticlePool.prototype.draw = function (context, image) {
-            // draw active particles
-            if (firstActive < firstFree) {
-                for (i = firstActive; i < firstFree; i++)
-                    particles[i].draw(context, image);
-            }
-            if (firstFree < firstActive) {
-                for (i = firstActive; i < particles.length; i++)
-                    particles[i].draw(context, image);
-                for (i = 0; i < firstFree; i++) particles[i].draw(context, image);
-            }
-        };
-        return ParticlePool;
-    })();
- 
-    /*
-     * Putting it all together
-     */
-    (function (canvas) {
-        var context = canvas.getContext("2d"),
-            particles = new ParticlePool(settings.particles.length),
-            particleRate =
-                settings.particles.length / settings.particles.duration, // particles/sec
-            time;
- 
-        // get point on heart with -PI <= t <= PI
-        function pointOnHeart(t) {
-            return new Point(
-                160 * Math.pow(Math.sin(t), 3),
-                130 * Math.cos(t) -
-                50 * Math.cos(2 * t) -
-                20 * Math.cos(3 * t) -
-                10 * Math.cos(4 * t) +
-                25
-            );
-        }
- 
-        // creating the particle image using a dummy canvas
-        var image = (function () {
-            var canvas = document.createElement("canvas"),
-                context = canvas.getContext("2d");
-            canvas.width = settings.particles.size;
-            canvas.height = settings.particles.size;
-            // helper function to create the path
-            function to(t) {
-                var point = pointOnHeart(t);
-                point.x =
-                    settings.particles.size / 2 +
-                    (point.x * settings.particles.size) / 350;
-                point.y =
-                    settings.particles.size / 2 -
-                    (point.y * settings.particles.size) / 350;
-                return point;
-            }
-            // create the path
-            context.beginPath();
-            var t = -Math.PI;
-            var point = to(t);
-            context.moveTo(point.x, point.y);
-            while (t < Math.PI) {
-                t += 0.01; // baby steps!
-                point = to(t);
-                context.lineTo(point.x, point.y);
-            }
-            context.closePath();
-            // create the fill
-            context.fillStyle = "#ea80b0";
-            context.fill();
-            // create the image
-            var image = new Image();
-            image.src = canvas.toDataURL();
-            return image;
-        })();
- 
-        // render that thing!
-        function render() {
-            // next animation frame
-            requestAnimationFrame(render);
- 
-            // update time
-            var newTime = new Date().getTime() / 1000,
-                deltaTime = newTime - (time || newTime);
-            time = newTime;
- 
-            // clear canvas
-            context.clearRect(0, 0, canvas.width, canvas.height);
- 
-            // create new particles
-            var amount = particleRate * deltaTime;
-            for (var i = 0; i < amount; i++) {
-                var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
-                var dir = pos.clone().length(settings.particles.velocity);
-                particles.add(
-                    canvas.width / 2 + pos.x,
-                    canvas.height / 2 - pos.y,
-                    dir.x,
-                    -dir.y
-                );
-            }
- 
-            // update and draw particles
-            particles.update(deltaTime);
-            particles.draw(context, image);
-        }
- 
-        // handle (re-)sizing of the canvas
-        function onResize() {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-        }
-        window.onresize = onResize;
- 
-        // delay rendering bootstrap
-        setTimeout(function () {
-            onResize();
-            render();
-        }, 10);
-    })(document.getElementById("pinkboard"));
-</script>
- 
-<script>
-    var RENDERER = {
-        INIT_CHERRY_BLOSSOM_COUNT: 30,
-        MAX_ADDING_INTERVAL: 10,
- 
-        init: function () {
-            this.setParameters();
-            this.reconstructMethods();
-            this.createCherries();
-            this.render();
-            if (
-                navigator.userAgent.match(
-                    /(phone|pod|iPhone|iPod|ios|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
-                )
-            ) {
-                // var box = document.querySelectorAll(".box")[0];
-                // console.log(box, "移动端");
-                // box.style.marginTop = "65%";
-            }
-        },
-        setParameters: function () {
-            this.$container = $("#jsi-cherry-container");
-            this.width = this.$container.width();
-            this.height = this.$container.height();
-            this.context = $("<canvas />")
-                .attr({ width: this.width, height: this.height })
-                .appendTo(this.$container)
-                .get(0)
-            var rate = this.FOCUS_POSITION / (this.z + this.FOCUS_POSITION),
-                x = this.renderer.width / 2 + this.x * rate,
-                y = this.renderer.height / 2 - this.y * rate;
-            return { rate: rate, x: x, y: y };
-        },
-        re
-    }
-    } else {
-        this.phi += Math.PI / (axis.y == this.thresholdY ? 200 : 500);
-        this.phi %= Math.PI;
-    }
-    if (this.y <= -this.renderer.height * this.SURFACE_RATE) {
-        this.x += 2;
-        this.y = -this.renderer.height * this.SURFACE_RATE;
-    } else {
-        this.x += this.vx;
-        this.y += this.vy;
-    }
-    return (
-        this.z > -this.FOCUS_POSITION &&
-        this.z < this.FAR_LIMIT &&
-        this.x < this.renderer.width * 1.5
-    );
-    },
-    };
-    $(function () {
-        RENDERER.init();
-    });
-</script>
